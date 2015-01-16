@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.geom.Ellipse2D;
 
 /**
@@ -16,29 +18,50 @@ public class GamePanel extends JPanel implements Runnable {
     private int state = STATE_STOP;
     private int direction = 135;
     private int speed = 1;
+    private int player1Position = 200;
 
     public GamePanel(int radius, int positionX, int positionY) {
         super();
         this.radius = radius;
         this.positionX = positionX;
         this.positionY = positionY;
+
+        setFocusable(true);
+        addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                    player1Position -= 50;
+                } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    player1Position += 50;
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+            }
+        });
     }
 
     public void paint(Graphics g) {
-        // super.paint(g);
-//        Graphics2D g2 = (Graphics2D) g;
-//        g2.setColor(Color.BLACK);
-//        g2.fill(new Ellipse2D.Double(0, 0, width, height));
-
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        // g2.setPaint(new GradientPaint(0, 0, Color.blue, 20, 10, Color.red, true));
+
+        // clear area
         g2.setColor(Color.WHITE);
         g2.fillRect(0, 0, getWidth(), getHeight());
 
+        // draw ball
         g2.setColor(Color.BLACK);
         g2.fill(new Ellipse2D.Double(positionX, positionY, radius, radius));
         // g2.fillRect(positionX, positionY, 20, 20);
+
+        // draw bottom player
+        g2.fillRect(player1Position, getHeight() - 20, 100, 20);
 
     }
 
