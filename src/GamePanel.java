@@ -69,7 +69,10 @@ public class GamePanel extends JPanel implements Runnable {
                         break;
                 }
 
-                if (positionX + radius > getWidth() && positionY + radius > getHeight() || positionX < 0 && positionY < 0) {
+                if (positionX + radius > getWidth() && positionY + radius > getHeight()
+                        || positionX < 0 && positionY < 0
+                        || positionX < 0 && positionY + radius > getHeight()
+                        || positionX + radius > getWidth() && positionY < 0) {
                     direction = (direction + 180) % 360;
                 } else if (positionX + radius > getWidth()) {
                     if (direction < 90) {
