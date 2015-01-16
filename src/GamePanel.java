@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 
 /**
- * Created by qwer on 16.01.15.
+ * Created by timur560 on 16.01.15.
  */
 public class GamePanel extends JPanel implements Runnable {
     private int radius = 20;
@@ -68,7 +68,6 @@ public class GamePanel extends JPanel implements Runnable {
                         positionY -= speed;
                         break;
                 }
-// System.out.println(positionX + " " + positionY);
 
                 if (positionX + radius > getWidth() && positionY + radius > getHeight() || positionX < 0 && positionY < 0) {
                     direction = (direction + 180) % 360;
