@@ -1,36 +1,53 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by timur560 on 16.01.15.
  */
 public class GamePanel extends JPanel implements Runnable {
-    private int radius = 20;
-    private int positionX = 50;
-    private int positionY = 50;
-
     public static final int STATE_STOP = 0;
     public static final int STATE_MOVE = 1;
 
-    public static final int STATE_STAYING = 0;
-    public static final int STATE_MOVING_LEFT = 1;
-    public static final int STATE_MOVING_RIGHT = 2;
+    public static final int PLAYER_STATE_STAYING = 0;
+    public static final int PLAYER_STATE_MOVING_LEFT = 1;
+    public static final int PLAYER_STATE_MOVING_RIGHT = 2;
 
+    public static final int SPEED_MODE_NORMAL = 1;
+    public static final int SPEED_MODE_SLOWER = 2;
+
+    private int radius = 50;
+    private int[] position = {225, 500};
+    private int direction = 30;
     private int state = STATE_STOP;
-    private int direction = 135;
-    private int speed = 1;
+    private int speed = 30;
     private int player1Position = 200;
+    private int player1Length = 200;
+    private int player1Height = 52;
+    private int speedMode = SPEED_MODE_NORMAL;
 
-    private int player1State = STATE_STAYING;
+    private static BufferedImage ballImage, backImage, platformImage;
 
-    public GamePanel(int radius, int positionX, int positionY) {
+    private int score = 0;
+
+    private int player1State = PLAYER_STATE_STAYING;
+
+    public GamePanel() {
         super();
-        this.radius = radius;
-        this.positionX = positionX;
-        this.positionY = positionY;
+
+        try {
+            ballImage = ImageIO.read(new File(this.getClass().getResource("images/ball.png").getFile()));
+            backImage = ImageIO.read(new File(this.getClass().getResource("images/background.jpg").getFile()));
+            platformImage = ImageIO.read(new File(this.getClass().getResource("images/platform.png").getFile()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         setFocusable(true);
         addKeyListener(new KeyListener() {
@@ -41,36 +58,49 @@ public class GamePanel extends JPanel implements Runnable {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                    player1State = STATE_MOVING_LEFT;
+                    player1State = PLAYER_STATE_MOVING_LEFT;
                 } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                    player1State = STATE_MOVING_RIGHT;
+                    player1State = PLAYER_STATE_MOVING_RIGHT;
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-                player1State = STATE_STAYING;
+                player1State = PLAYER_STATE_STAYING;
             }
 
 
         });
     }
 
+    @Override
     public void paint(Graphics g) {
+    // public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // clear area
-        g2.setColor(Color.WHITE);
+        // g2.setColor(Color.WHITE);
+        g2.setColor(new Color(238, 238, 238));
         g2.fillRect(0, 0, getWidth(), getHeight());
+        // g2.drawImage(backImage, 0, 0, null);
+
+        // score
+        g2.setColor(Color.BLACK);
+        g2.setFont(new Font("Arial", Font.BOLD, 50));
+        g2.drawString(score + "", 20, 100);
 
         // draw ball
         g2.setColor(Color.BLACK);
-        g2.fill(new Ellipse2D.Double(positionX, positionY, radius, radius));
+        // g2.fill(new Ellipse2D.Double(positionX, positionY, radius, radius));
         // g2.fillRect(positionX, positionY, 20, 20);
+        g2.drawImage(ballImage, position[0], position[1], null);
+
 
         // draw bottom player
-        g2.fillRect(player1Position, getHeight() - 20, 200, 20);
+        // g2.fillRect(player1Position, getHeight() - player1Height, player1Length, player1Height);
+        g2.drawImage(platformImage, player1Position, getHeight() - player1Height, null);
+
 
     }
 
@@ -79,92 +109,229 @@ public class GamePanel extends JPanel implements Runnable {
         try {
             while (state == STATE_MOVE) {
                 repaint();
+
                 if (getWidth() == 0 || getHeight() == 0) {
                     continue;
                 }
 
                 switch (player1State) {
-                    case STATE_MOVING_LEFT:
+                    case PLAYER_STATE_MOVING_LEFT:
                         player1Position -= 2;
                         break;
-                    case STATE_MOVING_RIGHT:
+                    case PLAYER_STATE_MOVING_RIGHT:
                         player1Position += 2;
                         break;
                 }
 
-                switch (direction) {
-                    case 45:
-                        positionX += speed;
-                        positionY -= speed;
-                        break;
-                    case 135:
-                        positionX += speed;
-                        positionY += speed;
-                        break;
-                    case 225:
-                        positionX -= speed;
-                        positionY += speed;
-                        break;
-                    case 315:
-                        positionX -= speed;
-                        positionY -= speed;
-                        break;
-                }
+                changeBallPosition(direction);
 
                 checkBorders();
 
                 repaint();
 
-                Thread.sleep(1000 / 400);
+                switch (speedMode) {
+                    case SPEED_MODE_NORMAL:
+                        Thread.sleep(100 / speed);
+                        break;
+                    case SPEED_MODE_SLOWER:
+                        Thread.sleep((int) ((float)(100 / speed) * 1.7));
+                        break;
+                }
+
             }
         } catch (InterruptedException ie) {
             //
         }
     }
 
+    /**
+     *
+     * @param direction - angle between 0 .. 360
+     */
+    private void changeBallPosition(int direction) {
+
+        direction = normalizeDirection(direction);
+
+        if (direction % 45 == 0) {
+            speedMode = SPEED_MODE_NORMAL;
+        } else {
+            speedMode = SPEED_MODE_SLOWER;
+        }
+
+        switch (direction) {
+            case 30:
+            case 45:
+            case 90:
+            case 135:
+            case 150:
+                position[0] ++;
+                break;
+
+            case 60:
+            case 120:
+                position[0] += 2;
+                break;
+
+            case 210:
+            case 225:
+            case 270:
+            case 315:
+            case 330:
+                position[0] --;
+                break;
+
+            case 240:
+            case 300:
+                position[0] -= 2;
+                break;
+        }
+
+        switch (direction) {
+            case 120:
+            case 135:
+            case 180:
+            case 225:
+            case 240:
+                position[1] ++;
+                break;
+
+            case 150:
+            case 210:
+                position[1] += 2;
+                break;
+
+            case 45:
+            case 60:
+            case 300:
+            case 315:
+            case 360:
+                position[1] --;
+                break;
+
+            case 30:
+            case 330:
+                position[1] -= 2;
+                break;
+        }
+
+    }
+
     private void checkBorders() {
+        // check if ball bounce on player
+
+        direction = normalizeDirection(direction);
+
+
+        if (position[1] + radius == getHeight() - player1Height
+                || position[1] + radius + 1 == getHeight() - player1Height) {
+            if (position[0] + radius >= player1Position && position[0] <= player1Position + player1Length) {
+                System.out.print(direction + "  ");
+                int k = (position[0] + radius / 2 - (player1Position + player1Length / 2));
+
+                switch (direction) {
+                    case 240: direction = 300; break;
+                    case 225: direction = 315; break;
+                    case 210: direction = 330; break;
+                    case 180: direction = 360; break;
+                    case 150: direction = 30; break;
+                    case 135: direction = 45; break;
+                    case 120: direction = 60; break;
+                }
+
+                // System.out.println(direction + "; k : " + k + "; new : " + direction1);
+                direction = normalizeDirection(direction + (int) (k / 3));
+                System.out.println(k + "  " + direction);
+                score += 10;
+                if (score % 100 == 0) {
+                    speed += 10;
+                }
+            }
+        }
+
         // check area borders
-        if (positionX + radius > getWidth() && positionY + radius > getHeight()
-                || positionX < 0 && positionY < 0
-                || positionX < 0 && positionY + radius > getHeight()
-                || positionX + radius > getWidth() && positionY < 0) {
+        else if (position[0] + radius > getWidth() && position[1] + radius > getHeight()
+                || position[0] < 0 && position[1] < 0
+                || position[0] < 0 && position[1] + radius > getHeight()
+                || position[0] + radius > getWidth() && position[1] < 0) { // corners
             direction = (direction + 180) % 360;
-        } else if (positionX + radius > getWidth()) {
-            if (direction < 90) {
-                direction = (direction - 90 < 0) ? (direction - 90 + 360) : (direction - 90);
-            } else {
-                direction = (direction + 90)  % 360;
+        } else if (position[0] + radius > getWidth()) { // right
+            switch (direction) {
+                case 30: direction = 330; break;
+                case 45: direction = 315; break;
+                case 60: direction = 300; break;
+                case 90: direction = 270; break;
+                case 120: direction = 240; break;
+                case 135: direction = 225; break;
+                case 150: direction = 210; break;
             }
-        } else if (positionY + radius > getHeight()) {
-            if (direction < 180) {
-                direction = (direction - 90 < 0) ? (direction - 90 + 360) : (direction - 90);
-            } else {
-                direction = (direction + 90) % 360;
+        } else if (position[1] + radius > getHeight()) { // bottom
+            lose();
+            reset();
+//            if (direction < 180) {
+//                direction = (direction - 90 < 0) ? (direction - 90 + 360) : (direction - 90);
+//            } else {
+//                direction = (direction + 90) % 360;
+//            }
+        } else if (position[1] <= 0) { // top
+            switch (direction) {
+                case 300: direction = 240; break;
+                case 315: direction = 225; break;
+                case 330: direction = 210; break;
+                case 360: case 0: direction = 180; break;
+                case 30: direction = 150; break;
+                case 45: direction = 135; break;
+                case 60: direction = 120; break;
             }
-        } else if (positionY <= 0) {
-            if (positionY < 90) {
-                direction = (direction + 90) % 360;
-            } else {
-                direction = (direction - 90 < 0) ? (direction - 90 + 360) : (direction - 90);
-            }
-        } else if (positionX <= 0) {
-            if (positionY > 270) {
-                direction = (direction + 90) % 360;
-            } else {
-                direction = (direction - 90 < 0) ? (direction - 90 + 360) : (direction - 90);
+        } else if (position[0] <= 0) { // left
+            switch (direction) {
+                case 330: direction = 30; break;
+                case 315: direction = 45; break;
+                case 300: direction = 60; break;
+                case 270: direction = 90; break;
+                case 240: direction = 120; break;
+                case 225: direction = 135; break;
+                case 210: direction = 150; break;
             }
         }
 
         // check player surface
 
-        // TODO
+        if (player1Position + player1Length >= getWidth()) {
+            player1State = PLAYER_STATE_STAYING;
+            player1Position = getWidth() - player1Length;
+        } else if (player1Position <= 0) {
+            player1State = PLAYER_STATE_STAYING;
+            player1Position = 0;
+        }
+    }
+
+    private int normalizeDirection(int direction) {
+        direction = direction % 360;
+
+        if (direction % 30 > direction % 45) {
+            return direction / 45 * 45;
+        } else {
+            return direction / 30 * 30;
+        }
+
+    }
+
+    private void reset() {
+        score = 0;
+        speed = 30;
+        position = new int[]{225, 500};
+        direction = 30;
+    }
+
+    private void lose() {
+        JOptionPane.showMessageDialog(this, "Your score: " + score, "Game over", JOptionPane.INFORMATION_MESSAGE);
     }
 
     Thread animationThread = new Thread(this);
 
-    public void startMove(int direction) {
+    public void startMove() {
         state = STATE_MOVE;
-        this.direction = direction;
+        // this.direction = direction;
         animationThread.start();
     }
 
