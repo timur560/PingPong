@@ -10,7 +10,7 @@ public class MainFrame extends JFrame {
     public MainFrame() {
         super();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setSize(500, 800);
+        setSize(500, 700);
         gamePane.setBackground(Color.WHITE);
         gamePane.setLayout(null);
         add(gamePane);

@@ -7,6 +7,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Random;
 
 /**
  * Created by timur560 on 16.01.15.
@@ -205,6 +206,7 @@ public class GamePanel extends JPanel implements Runnable {
             case 300:
             case 315:
             case 360:
+            case 0:
                 position[1] --;
                 break;
 
@@ -221,26 +223,12 @@ public class GamePanel extends JPanel implements Runnable {
 
         direction = normalizeDirection(direction);
 
-
         if (position[1] + radius == getHeight() - player1Height
                 || position[1] + radius + 1 == getHeight() - player1Height) {
+            position[1]--; // = getHeight() - player1Height - radius;
             if (position[0] + radius >= player1Position && position[0] <= player1Position + player1Length) {
-                System.out.print(direction + "  ");
-                int k = (position[0] + radius / 2 - (player1Position + player1Length / 2));
-
-                switch (direction) {
-                    case 240: direction = 300; break;
-                    case 225: direction = 315; break;
-                    case 210: direction = 330; break;
-                    case 180: direction = 360; break;
-                    case 150: direction = 30; break;
-                    case 135: direction = 45; break;
-                    case 120: direction = 60; break;
-                }
-
-                // System.out.println(direction + "; k : " + k + "; new : " + direction1);
-                direction = normalizeDirection(direction + (int) (k / 3));
-                System.out.println(k + "  " + direction);
+                int touchPosition = position[0] + radius / 2 - player1Position;
+                direction = normalizeDirection(300 + 120 * touchPosition / player1Length);
                 score += 10;
                 if (score % 100 == 0) {
                     speed += 10;
@@ -259,7 +247,7 @@ public class GamePanel extends JPanel implements Runnable {
                 case 30: direction = 330; break;
                 case 45: direction = 315; break;
                 case 60: direction = 300; break;
-                case 90: direction = 270; break;
+                case 90: direction = normalizeDirection(new Random().nextInt(340 - 200) + 200); break;
                 case 120: direction = 240; break;
                 case 135: direction = 225; break;
                 case 150: direction = 210; break;
@@ -287,7 +275,7 @@ public class GamePanel extends JPanel implements Runnable {
                 case 330: direction = 30; break;
                 case 315: direction = 45; break;
                 case 300: direction = 60; break;
-                case 270: direction = 90; break;
+                case 270: direction = normalizeDirection(new Random().nextInt(160 - 20) + 20); break;
                 case 240: direction = 120; break;
                 case 225: direction = 135; break;
                 case 210: direction = 150; break;
