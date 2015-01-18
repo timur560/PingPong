@@ -132,10 +132,10 @@ public class GamePanel extends JPanel implements Runnable {
 
                 switch (speedMode) {
                     case SPEED_MODE_NORMAL:
-                        Thread.sleep(100 / speed);
+                        Thread.sleep(Math.round(100.0 / (float)speed));
                         break;
                     case SPEED_MODE_SLOWER:
-                        Thread.sleep((int) ((float)(100 / speed) * 1.7));
+                        Thread.sleep(Math.round((100.0 / (float)speed) * 1.7));
                         break;
                 }
 
@@ -227,12 +227,13 @@ public class GamePanel extends JPanel implements Runnable {
                 || position[1] + radius + 1 == getHeight() - player1Height) {
             position[1]--; // = getHeight() - player1Height - radius;
             if (position[0] + radius >= player1Position && position[0] <= player1Position + player1Length) {
-                int touchPosition = position[0] + radius / 2 - player1Position;
+                int touchPosition = position[0] + radius - player1Position;
                 direction = normalizeDirection(300 + 120 * touchPosition / player1Length);
+                // System.out.println(touchPosition + " " + direction);
                 score += 10;
-                if (score % 100 == 0) {
-                    speed += 10;
-                }
+                //if (score % 100 == 0) {
+                    speed += 1;
+                //}
             }
         }
 
